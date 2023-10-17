@@ -1,0 +1,67 @@
+#Indiana Jones | Naive Method
+#Indiana Jones, His Girl, A wonded guy, A boy needed to cross a river with a boat.
+#This boat can carry only two persons at a time. There is a lamp which goes with every actor back and forth.
+#Indiana Jones needs 1min, The girl needs 2mins, The boy needs 4mins and the Wounded guy needs 8mins to cross the river.
+#There is only 16mins left all to cross the bridge before the canibals arrive.
+#Following is the Naive method of the problem
+
+from nfa import *
+
+NFA.clear()
+
+NFA.NOVISU = False
+NFA.VISULANG = 2
+NFA.VISU_INITIAL_ARROW = False
+NFA.VISUDOUBLEARROWS = True
+
+actorsv = I, G, W, C, L = "Indiana", "Girl", "Wounded_Guy", "Kid", "Lamp" #Defining the actors
+actors = fset(actorsv) #Frozen set
+
+NFA.visutext("Naïve method for Indiana Jones Problem")
+
+def time_to_cross(s):
+    time = {"Indiana":1, "Girl":2, "Wounded_Guy":4, "Kid": 8, "Lamp":0}
+    return max(time[a] for a in s)
+
+def growIndiana(A):
+    #print(A)
+    has=False
+    def extend(Q):# Q is a couple of set and an integer. Always make sure you are dealing with the same types
+        p,t = Q #Dividing the big Q in to a set and an integer
+        nonlocal has #a variable being referenced in a nested function is a non-local variable, rather than a local variable or a global variable.
+        #Left to right movement
+        if L in p: #Lamp is an element of actors and p is an actor too. same type
+            for a in p: #There are two actors going from the left bank to right except Lamp
+                for b in p - {L}: #the other actor who is crossing the bank
+                    l = {L,a,b} #Defining Lamda
+                    q = p - l # The actors left in the Left bank after the transition
+                    tt = t - time_to_cross(l) #Time left after the transition
+                    if tt >= 0: has = A.try_rule(Q, tuple(sorted(l- {L})), (q,tt)) or has #defining the rule
+
+        if L not in p:
+            #r = actors.intersection(fset(p)) # A & B
+            #for a in actors -p : pass
+            r = actors - p
+            for a in r:  # code for the right side where the lamp is not there
+                for b in r - {L}:  # removing the lamp from the actors, L should be a set to substract from the list p
+                    l = {L, a, b}  # Lamda
+                    q = p | l # Actors left after the transition
+                    tt = t - time_to_cross(l)  # Time left after the transition
+                    if tt >= 0: has = A.try_rule(Q, tuple(sorted(l - {L})), (q, tt)) or has
+
+    for q in A.Q.copy(): extend(q)
+    return has
+
+IGWCL_Problem = NFA(
+    {(actors,15)}, #Defining the data set, A couple of a set and an integer
+    name="IGWCL",
+    worder=tuple
+).visu()
+
+IGWCL_Problem.growtofixpoint(growIndiana, record_steps=True)
+IGWCL_Problem.F = {(fset(), x) for x in range(16)}
+#IGWCL_Problem = IGWCL_Problem.trim()
+
+# IGWCL_Problem.visusteps() #(rankdir="TB")
+
+IGWCL_Problem.visu().trim().visu()
