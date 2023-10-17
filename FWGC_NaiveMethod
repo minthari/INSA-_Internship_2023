@@ -1,1 +1,65 @@
+#WOLF,FARMER, CABBAGE,GOAT PROBLEM - NAIVE METHOD
+#There is a Farmer who needs to cross the river with his purchases, Wolf, Goat and Cabbage.
+#The wolf can't be left alone with the Goat and the goat can't be left alone with cabbage.
+#Prior to these constraints following solution is developed using NAIVE method
+
+#Okular is an universal document viewer. Here we use Okular to view the generated pdf outside of the console.
+#use okular visu.pdf & to open the pdf in a seperate window
+#we need to keep track on which bank of which actor is
+#Each time the program runs as a fresh one as it clears all the previous data
+
+from nfa import *
+
+NFA.clear()
+
+NFA.NOVISU = False
+NFA.VISULANG = 2
+NFA.VISU_INITIAL_ARROW = False
+NFA.VISUDOUBLEARROWS = True
+
+actorsv = W, G, C, F = "Wolf", "Goat", "Cabb", "Farmer" #Defining the actors
+actors = fset(actorsv) #Frozen set
+
+NFA.visutext("Naïve method for Wold, Farmer, Cabbage and Goat problem")
+
+FWGC_Problem = NFA(
+    {actors},#Definig the data type, a set
+    name="FWGC",
+    worder=tuple
+).visu()
+
+def l0(s):
+    return F in s if {W, G} <= s or {G, C} <= s else True #Definig the condition;see page 43 in verification tools
+
+def l(q):#q is a state, which defines the collection of actors in the left bank
+    q_ = actors-q
+    return l0(q) and l0(q_) #actors in the left bank and actors in right bank,negation operator(compliment)
+
+# def l(Q): return True # what if no constraints?
+
+def growfarmer(A):
+    has=False #Left bank is considered to be false, 0
+    def extend(p): #p is an element of Q
+        nonlocal has
+        if F in p:
+            for a in p:
+                q = p - {a, F}
+                if l(q): has = A.try_rule(q, a, p) or has
+
+        if F not in p:
+            for a in actors - p:
+                q = p | {a,F}
+                if l(q): has = A.try_rule(q, a, p) or has
+
+    for p in A.Q.copy(): extend(p)
+    return has
+
+FWGC_Problem.growtofixpoint(growfarmer, record_steps=True)
+FWGC_Problem.F = {fset()}
+
+FWGC_Problem.visusteps()#(rankdir="TB")
+FWGC_Problem.map(f=lambda q: (
+    ", ".join(q) + " \\n~~~~~~~\\n " + ", ".join(actors-q)
+)).visu(break_strings=False, pdfcrop=True)
+
 
