@@ -1,0 +1,47 @@
+#Indiana Jones Scenario using Product method
+#By Thilini
+
+from nfa import *
+
+NFA.clear()
+NFA.NOVISU = False
+NFA.VISULANG = 2
+NFA.VISU_INITIAL_ARROW = False
+NFA.VISUDOUBLEARROWS = True
+
+def time_to_cross(s): #funstions to compare two times
+    time = {"Indiana":1, "Girl":2, "Wounded_Guy":4, "Kid": 8, "Lamp":0} #Defining a set for the time of each actor
+    return max(time[a] for a in s)
+    #return max(time.get(a), time.get(b)) #Get the maximum time the actors take to cross the banks
+
+def v(n,m,i,X): #Synchronisation
+    return NFA({i}, Q:= range(n, m+1), {
+        (p, x if x<0 else f"+{x}", p + x)
+        for p in Q
+        for x in X
+        if n<= p+x <= m
+    }).named(f"Time")
+
+actorsv = I, G, W, C, L = "Indiana", "Girl", "Wounded_Guy", "Kid", "Lamp" #Defining components
+actors = fset(actorsv) #Frozen set
+actors_noL = actors-{L} #Defining another frozen set without the Lamp
+Time = v(0,15,15,{-1,-2,-4,-8}) #Time component
+
+NFA.visutext("Product method for Indiana Jones Problem")
+
+Char = NFA.spec("""
+0
+1
+0 1 1
+1 0 0""","Char").visu()
+
+sysv = [Char.copy().named(x) for x in actors]
+#print(sysv)
+sds = [{L:x,a:x,b:x, "Time":- time_to_cross({a,b})} for x in {0,1} for a in actors_noL for b in actors_noL]#Lamp is moving everytime and the actors are varying
+
+P = NFA.nsprod(*sysv, Time,
+               sds=sds
+               ).visu().trim().visu() #can see the previous states
+
+print(repr(P))
+P.dnice(f="states").trim().visu()
