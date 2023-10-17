@@ -1,0 +1,66 @@
+# River Kawai Problem | Solution by Thilini | Product version
+#The bridge across Kawai has blown off and a soldier and a captain try to cross the river.
+#There are two young children named Alice and Bob. They like to lend the boat to the people.
+#Alice doesn't like to go with Captain as he scares Alice to death.
+#The boat can only bare two people at a time.
+
+#Alice and Bob decided to name a price for the service.
+#For Alice and Bob they demand 1$ each and 4 for adults.
+
+# This problem is a collection of both Wolf and Farmer problem and Indiana Jones problem
+from nfa import *
+
+NFA.clear()
+
+NFA.NOVISU = False
+NFA.VISULANG = 2
+NFA.VISU_INITIAL_ARROW = False
+NFA.VISUDOUBLEARROWS = True
+
+def _licit(s):
+    return len(s - {E}) > 2 if {A,C} in s else True
+
+def prodfilter(A, P, v, Q):
+    return Q not in A.Q and _licit(invd(Q)[0]) and _licit(invd(Q)[1])
+
+def v(n,m,i,X): #Synchronisation
+    return NFA({i}, Q:= range(n, m+1), {
+        (p, x if x<0 else f"+{x}", p + x)
+        for p in Q
+        for x in X
+        if n<= p+x <= m
+    }).named(f"Cost")
+
+actorsv = A, B, C, S, E = "Alice", "Bob", "Captain", "Soldier", "Boat" #Definig the actors
+actors = fset(actorsv) #Frozen set
+#actors_noL = actors-{E} #Defining another frozen set without the boat
+Cost = v(0,18,18,{-1,-2,-4}) #Time component
+Cost.visu()
+
+NFA.visutext("Product method for River Kawai Problem")
+
+Char = NFA.spec("""
+0
+1
+0 1 1
+1 0 0""","Char").visu()
+
+sysv = [Char.copy().named(x) for x in actors]
+#print(sysv)
+sds = [{E:x, c:x, d:x} for x in {0,1} for c in {A,B} for d in {A,B} ] + [{E:x,c:x} for x in {0,1} for c in {C,S}]#named produc, This is S
+
+def cost_to_pay(s): #defining the function for the part 2
+    cost = {"Alice":1, "Bob":1, "Captain":4, "Soldier": 4} #Defining a set for the cost
+    return - sum(cost[a] for a in s)
+
+sds2 = ([{E:x, c:x, d:x, "Cost":cost_to_pay({c,d})}
+        for x in {0,1} for c in {A,B} for d in {A,B} ]
+        + [{E:x,c:x,"Cost":cost_to_pay({c})}
+           for x in {0,1} for c in {C,S}])
+
+P = NFA.nsprod(*sysv, Cost,#Automata C, * unpacking
+               sds=sds2
+               ).visu().trim().visu() #can see the previous states
+
+print(repr(P))
+P.dnice().visu()
